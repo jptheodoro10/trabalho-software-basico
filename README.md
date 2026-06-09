@@ -293,6 +293,12 @@ FIX PARAM
 IND FIX
 FIX FIX PARAM
 FIX PARAM PARAM
+
+coisas a fazer:
+- mudar nome da variavel modrm
+- padronizar emissao de bytes (criar funcao aux que usa um for)
+- fazer verificacoes de tipo e  de tamanho visando proteger o codigo de comportamentos inesperados e outputs errados
+-pedir pra ia gerar varios casos teste e tentar quebrarn nosso codigo
 PARAM FIX PARAM
 ```
 
