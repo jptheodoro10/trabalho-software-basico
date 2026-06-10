@@ -6,6 +6,13 @@
 
 static const unsigned char regs[3] = {7, 6, 2}; /* rdi, rsi, rdx */
 
+static void emiteN (unsigned char codigo[], int *pos, uintptr_t v , int n) {
+  int i;
+
+  for (i = 0; i < n; i++)
+    codigo[(*pos)++] = (unsigned char)((v >> (8 * i)) & 0xff);
+}
+
 static void emite1(unsigned char codigo[], int *pos, unsigned char b)
 {
   emiteN(codigo,pos,b,1);
@@ -19,12 +26,6 @@ static void emite4(unsigned char codigo[], int *pos, int32_t v)
 static void emite8(unsigned char codigo[], int *pos, uintptr_t v)
 {
   emiteN(codigo,pos,v,8);
-}
-static void emiteN (unsigned char codigo[], int *pos, uintptr_t v , int n) {
-  int i;
-
-  for (i = 0; i < n; i++)
-    codigo[(*pos)++] = (unsigned char)((v >> (8 * i)) & 0xff);
 }
 
 static void gera_prologo(unsigned char codigo[], int *pos)
