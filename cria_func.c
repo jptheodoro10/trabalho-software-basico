@@ -1,29 +1,31 @@
-/* Joao Pedro Lacerda Theodoro 2510968 3WA */
+/* Joao Pedro Lacerda Theodoro 2510968  */
+/* Carlos Frederico Sant'ana 2511920*/
 
 #include "cria_func.h"
 #include <stdint.h>
 
 static const unsigned char regs[3] = {7, 6, 2}; /* rdi, rsi, rdx */
 
+static void emiteN (unsigned char codigo[], int *pos, uintptr_t v , int n) {
+  int i;
+
+  for (i = 0; i < n; i++)
+    codigo[(*pos)++] = (unsigned char)((v >> (8 * i)) & 0xff);
+}
+
 static void emite1(unsigned char codigo[], int *pos, unsigned char b)
 {
-  codigo[(*pos)++] = b;
+  emiteN(codigo,pos,b,1);
 }
 
 static void emite4(unsigned char codigo[], int *pos, int32_t v)
 {
-  codigo[(*pos)++] = (unsigned char)(v & 0xff);
-  codigo[(*pos)++] = (unsigned char)((v >> 8) & 0xff);
-  codigo[(*pos)++] = (unsigned char)((v >> 16) & 0xff);
-  codigo[(*pos)++] = (unsigned char)((v >> 24) & 0xff);
+  emiteN(codigo,pos,v,4);
 }
 
 static void emite8(unsigned char codigo[], int *pos, uintptr_t v)
 {
-  int i;
-
-  for (i = 0; i < 8; i++)
-    codigo[(*pos)++] = (unsigned char)((v >> (8 * i)) & 0xff);
+  emiteN(codigo,pos,v,8);
 }
 
 static void gera_prologo(unsigned char codigo[], int *pos)
