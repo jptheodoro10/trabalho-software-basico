@@ -4,28 +4,30 @@
 #include "cria_func.h"
 #include <stdint.h>
 
-static const unsigned char regs[3] = {7, 6, 2}; /* rdi, rsi, rdx */
+/* codigos dos registradores dos 3 primeiros argumentos: rdi, rsi, rdx */
+static const unsigned char regs[3] = {7, 6, 2};
 
-static void emiteN (unsigned char codigo[], int *pos, uintptr_t v , int n) {
+static void emiteN(unsigned char codigo[], int *pos, uintptr_t v, int n)
+{
   int i;
 
   for (i = 0; i < n; i++)
-    codigo[(*pos)++] = (unsigned char)((v >> (8 * i)) & 0xff);
+    codigo[(*pos)++] = (unsigned char)((v >> (8 * i)) & 0xff); /* grava em little-endian */
 }
 
 static void emite1(unsigned char codigo[], int *pos, unsigned char b)
 {
-  emiteN(codigo,pos,b,1);
+  emiteN(codigo, pos, b, 1);
 }
 
 static void emite4(unsigned char codigo[], int *pos, int32_t v)
 {
-  emiteN(codigo,pos,v,4);
+  emiteN(codigo, pos, v, 4);
 }
 
 static void emite8(unsigned char codigo[], int *pos, uintptr_t v)
 {
-  emiteN(codigo,pos,v,8);
+  emiteN(codigo, pos, v, 8);
 }
 
 static void gera_prologo(unsigned char codigo[], int *pos)
@@ -47,6 +49,7 @@ static void gera_mov_param(unsigned char codigo[], int *pos, int origem,
   if (tipo == PTR_PAR)
     emite1(codigo, pos, 0x48);
 
+  /* monta o byte ModRM do mov entre dois registradores */
   modrm = (unsigned char)(0xc0 | (regs[origem] << 3) | regs[destino]);
   emite1(codigo, pos, 0x89);
   emite1(codigo, pos, modrm);
@@ -57,11 +60,13 @@ static void gera_mov_fix(unsigned char codigo[], int *pos, int destino,
 {
   if (param->tipo_val == INT_PAR)
   {
+    /* carrega constante inteira de 32 bits no registrador certo */
     emite1(codigo, pos, (unsigned char)(0xb8 + regs[destino]));
     emite4(codigo, pos, (int32_t)param->valor.v_int);
   }
   else
   {
+    /* carrega ponteiro fixo usando movabs de 64 bits */
     emite1(codigo, pos, 0x48);
     emite1(codigo, pos, (unsigned char)(0xb8 + regs[destino]));
     emite8(codigo, pos, (uintptr_t)param->valor.v_ptr);
@@ -77,6 +82,7 @@ static void gera_mov_ind(unsigned char codigo[], int *pos, int destino,
   emite1(codigo, pos, 0xbb); /* movabs endereco,%r11 */
   emite8(codigo, pos, (uintptr_t)param->valor.v_ptr);
 
+  /* le da memoria apontada por r11 e coloca no registrador destino */
   emite1(codigo, pos, param->tipo_val == PTR_PAR ? 0x49 : 0x41);
   emite1(codigo, pos, 0x8b);
   modrm = (unsigned char)((regs[destino] << 3) | 3);
@@ -105,6 +111,7 @@ void cria_func(void *f, DescParam params[], int n, unsigned char codigo[])
   int prox_param = 0;
   int i;
 
+  /* guarda de qual argumento da funcao gerada vem cada PARAM */
   for (i = 0; i < n; i++)
   {
     if (params[i].orig_val == PARAM)
@@ -115,6 +122,7 @@ void cria_func(void *f, DescParam params[], int n, unsigned char codigo[])
 
   gera_prologo(codigo, &pos);
 
+  /* anda de tras para frente para nao destruir PARAM antes de copia-lo */
   for (i = n - 1; i >= 0; i--)
   {
     if (params[i].orig_val == PARAM)
